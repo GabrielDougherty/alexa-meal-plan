@@ -10,10 +10,12 @@ def dumb_tests():
         
     myPlan = calendar_stuff.MealPlan(210, 120)
 
+    print("Testing error handling with plan parsing")
     try:
         badPlan = calendar_stuff.MealPlan(300, 23)
     except ValueError:
-        print("Caught an error!!!!!!")
-    
+        print("This should have been caught.")
+
+# uncomment this line for running as regular executable
 #if __name__ == "__main__":
 dumb_tests()
