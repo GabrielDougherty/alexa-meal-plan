@@ -25,9 +25,11 @@ class MealPlan:
         BLOCK_PLANS = [210, 175]
         WEEK_PLANS = [19, 14, 10]
 
+        # handle default start date
         if start_date is None:
             self.start_date = self.__default_start_date()
         else:
+            # otherwise, set to given date
             self.start_date = start_date
 
         # initialize meals, start date
@@ -35,13 +37,14 @@ class MealPlan:
         self.cur_date = datetime.now().date()
         
         # determine meal plan type
-        try:
-            self._plan_type = self.__det_plan_type(plan_meals)
-        except NameError: # if MealType doesn't exist
-            print("MealPlan needs MealType to work. Please import MealType.")
+        # try:
+        self._plan_type = self.__det_plan_type(plan_meals)
+        # except NameError: # if MealType doesn't exist
+        #     print("MealPlan needs MealType to work. Please import MealType.")
+        #     exit()
 
         # determine target meals per day
-        self._target_meals = self.__det_target_meals()
+        self._target_meals = self.__det_target_meals(plan_meals)
         
     def __det_plan_type(self, plan_meals):
         if plan_meals in BLOCK_PLANS:
@@ -52,14 +55,15 @@ class MealPlan:
             # unsure if this is the right error format
             raise ValueError("Invalid block plan")
 
-    def __det_target_meals(self):
-        return self.cur_meals/self.plan_meals
+    def __det_target_meals(self, plan_meals):
+        return self.cur_meals/plan_meals
 
-    # default start date is Fall 2017 start date (August 28, 2017)
+    # default start date is August 28 of current year
+    # this is correct for 2017
     def __default_start_date(self):
         start_date = date(int(datetime.now().year), 8, 28)
         return start_date
-        
+    
     @property
     def target_meals(self):
         return self._target_meals
