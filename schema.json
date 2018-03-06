@@ -1,0 +1,26 @@
+{
+  "intents": [
+    {
+      "slots": [
+        {
+          "name": "PlanType",
+          "type": "PLAN_TYPE"
+        },
+        {
+          "name": "PlanMeals",
+          "type": "AMAZON.NUMBER"
+        }
+      ],
+      "intent": "MyMealPlan"
+    },
+    {
+      "slots": [
+        {
+          "name": "CurrentMeals",
+          "type": "AMAZON.NUMBER"
+        }
+      ],
+      "intent": "GetTargetMeals"
+    }
+  ]
+}
