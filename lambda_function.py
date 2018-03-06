@@ -51,9 +51,9 @@ def on_intent(intent_request, session):
 
     # Dispatch to your skill's intent handlers
     if intent_name == "MyMealPlanIsIntent":
-        return set_color_in_session(intent, session)
+        return set_plan_in_session(intent, session)
     elif intent_name == "GetTargetMealsIntent":
-        return get_color_from_session(intent, session)
+        return get_target_from_session(intent, session)
     else:
         raise ValueError("Invalid intent")
 
@@ -91,7 +91,7 @@ def get_welcome_response():
         card_title, speech_output, reprompt_text, should_end_session))
 
 
-def set_color_in_session(intent, session):
+def set_plan_in_session(intent, session):
     """ Sets the color in the session and prepares the speech to reply to the
     user.
     """
@@ -100,28 +100,39 @@ def set_color_in_session(intent, session):
     session_attributes = {}
     should_end_session = False
 
-    if 'Color' in intent['slots']:
-        favorite_color = intent['slots']['Color']['value']
-        session_attributes = create_favorite_color_attributes(favorite_color)
-        speech_output = "I now know your favorite color is " + \
-                        favorite_color + \
-                        ". You can ask me your favorite color by saying, " \
-                        "what's my favorite color?"
-        reprompt_text = "You can ask me your favorite color by saying, " \
-                        "what's my favorite color?"
+    if 'PlanType' in intent['slots']:
+        plan_type = intent['slots']['PlanType']['value']
+        session_attributes = create_plan_type_attributes(plan_type)
+        speech_output = "I now know your meal plan is " + \
+                        plan_type + \
+                        ". You can ask for meal plan information by saying, " \
+                        "what's my meal plan?"
+        reprompt_text = ". You can ask for meal plan information by saying, " \
+                        "what's my meal plan?"
+    elif 'PlanMeals' in intent['slots']:
+        plan_meals = intent['slots']['PlanMeals']['value']
+        session_attributes = create_plan_meals_attributes(plan_meals)
+        speech_output = "I now know you have " + \
+                        plan_type + \
+                        " meals. You can ask for meal plan information by saying, " \
+                        "what's my meal plan?"
+        reprompt_text = ". You can ask for meal plan information by saying, " \
+                        "what's my meal plan?"
     else:
-        speech_output = "I'm not sure what your favorite color is. " \
+        speech_output = "I'm not sure what your meal plan is. " \
                         "Please try again."
-        reprompt_text = "I'm not sure what your favorite color is. " \
-                        "You can tell me your favorite color by saying, " \
-                        "my favorite color is red."
+        reprompt_text = "I'm not sure what your meal plan is. " \
+                        "You can tell me your meal plan by saying, " \
+                        "my meal plan is block 210."
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
 
-def create_favorite_color_attributes(favorite_color):
-    return {"favoriteColor": favorite_color}
+def create_plan_type_attributes(plan_type):
+    return {"planType": plan_type}
 
+def create_plan_meals_attributes(plan_meals):
+    return {"planMeals": plan_meals}
 
 def get_color_from_session(intent, session):
     session_attributes = {}
