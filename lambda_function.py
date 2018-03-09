@@ -55,7 +55,7 @@ def on_intent(intent_request, session):
     elif intent_name == "GetTargetMealsIntent":
         return gen_target_from_session(intent, session)
     else:
-        raise ValueError("Invalid intent")
+        raise ValueError("Invalid intent: " + intent_name)
 
 
 def on_session_ended(session_ended_request, session):
@@ -95,35 +95,47 @@ def set_plan_in_session(intent, session):
     """ Sets the color in the session and prepares the speech to reply to the
     user.
     """
-
+    
     card_title = intent['name']
     session_attributes = {}
     should_end_session = False
 
+    # necessary for handling input plan type and/or plan meals
+    got_plan_info = False
+    speech_output = ""
+    
+#    if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
     if 'PlanType' in intent['slots']:
         plan_type = intent['slots']['PlanType']['value']
-        session_attributes = create_plan_type_attributes(plan_type)
+        session_attributes.update(create_plan_type_attributes(plan_type))
         speech_output = "I now know your meal plan is " + \
                         plan_type + \
                         ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
         reprompt_text = ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
-    elif 'PlanMeals' in intent['slots']:
+        got_plan_info = True
+    
+#    if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
+    if 'PlanMeals' in intent['slots']:
         plan_meals = intent['slots']['PlanMeals']['value']
-        session_attributes = create_plan_meals_attributes(plan_meals)
-        speech_output = "I now know you have " + \
+        session_attributes.update(create_plan_meals_attributes(plan_meals))
+        speech_output += "I now know you have " + \
                         plan_type + \
                         " meals. You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
         reprompt_text = ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
-    else:
+        got_plan_info = True
+
+    if not got_plan_info:
         speech_output = "I'm not sure what your meal plan is. " \
                         "Please try again."
         reprompt_text = "I'm not sure what your meal plan is. " \
                         "You can tell me your meal plan by saying, " \
-                        "my meal plan is block 210."
+                        "\"My meal plan type is Block 210\", or " \
+                        "\"My meal plan type is Week.\""
+
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
@@ -138,7 +150,8 @@ def gen_target_from_session(intent, session):
     session_attributes = {}
     reprompt_text = None
 
-    if "PlanMeals" in session.get('attributes', {}):
+
+    if "PlanMeals" in session.get('attributes', {}) and session['attributes']['PlanMeals']:
         num_meals = session['attributes']['PlanMeals']
         speech_output = "You have " + num_meals + \
                         " meals."
