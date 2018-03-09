@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import urllib2
+import urllib.request
 import json
 
 def lambda_handler(event, context):
@@ -53,7 +53,7 @@ def on_intent(intent_request, session):
     if intent_name == "MyMealPlanIsIntent":
         return set_plan_in_session(intent, session)
     elif intent_name == "GetTargetMealsIntent":
-        return get_target_from_session(intent, session)
+        return gen_target_from_session(intent, session)
     else:
         raise ValueError("Invalid intent")
 
@@ -77,7 +77,7 @@ def get_welcome_response():
     session_attributes = {}
     card_title = "Welcome"
     speech_output = "Welcome to the Meal Planner. First, tell me your meal " \
-                    "plan type by saying, \"My meal plan type is Block 210\"" \
+                    "plan type by saying, \"My meal plan type is Block 210\" " \
                     "or \"My meal plan type is Week 14.\" Then ask me for your " \
                     "target number of meals by saying, \"I have 16 meals, what " \
                     "is my target?"
@@ -134,18 +134,18 @@ def create_plan_type_attributes(plan_type):
 def create_plan_meals_attributes(plan_meals):
     return {"planMeals": plan_meals}
 
-def get_color_from_session(intent, session):
+def gen_target_from_session(intent, session):
     session_attributes = {}
     reprompt_text = None
 
-    if "favoriteColor" in session.get('attributes', {}):
-        favorite_color = session['attributes']['favoriteColor']
-        speech_output = "Your favorite color is " + favorite_color + \
-                        ". Goodbye."
+    if "PlanMeals" in session.get('attributes', {}):
+        num_meals = session['attributes']['PlanMeals']
+        speech_output = "You have " + num_meals + \
+                        " meals."
         should_end_session = True
     else:
-        speech_output = "I'm not sure what your favorite color is. " \
-                        "You can say, my favorite color is red."
+        speech_output = "I'm not sure what your meal plan is. " \
+                        "You can say, I have a block meal plan."
         should_end_session = False
 
     # Setting reprompt_text to None signifies that we do not want to reprompt
