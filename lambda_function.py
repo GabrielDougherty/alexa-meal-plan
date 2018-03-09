@@ -103,9 +103,11 @@ def set_plan_in_session(intent, session):
     # necessary for handling input plan type and/or plan meals
     got_plan_info = False
     speech_output = ""
+
+    # having both of the if statements below gives issues (neither work, then)
     
-#    if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
-    if 'PlanType' in intent['slots']:
+    if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
+#    if 'PlanType' in intent['slots']:
         plan_type = intent['slots']['PlanType']['value']
         session_attributes.update(create_plan_type_attributes(plan_type))
         speech_output = "I now know your meal plan is " + \
@@ -115,7 +117,8 @@ def set_plan_in_session(intent, session):
         reprompt_text = ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
         got_plan_info = True
-    
+
+    '''
 #    if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
     if 'PlanMeals' in intent['slots']:
         plan_meals = intent['slots']['PlanMeals']['value']
@@ -127,6 +130,7 @@ def set_plan_in_session(intent, session):
         reprompt_text = ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
         got_plan_info = True
+    '''
 
     if not got_plan_info:
         speech_output = "I'm not sure what your meal plan is. " \
