@@ -92,57 +92,57 @@ def get_welcome_response():
 
 
 def set_plan_in_session(intent, session):
-    """ Sets the color in the session and prepares the speech to reply to the
+    """ Sets the plan in the session and prepares the speech to reply to the
     user.
     """
     
     card_title = intent['name']
     session_attributes = {}
-    should_end_session = False
 
-    # necessary for handling input plan type and/or plan meals
-    got_plan_info = False
-    speech_output = ""
-
-    # having both of the if statements below gives issues (neither work, then)
-    
+    # get meal plan type and count, if they exist
     if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
-#    if 'PlanType' in intent['slots']:
         plan_type = intent['slots']['PlanType']['value']
         session_attributes.update(create_plan_type_attributes(plan_type))
+
+    if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
+        plan_meals = intent['slots']['PlanMeals']['value']
+        session_attributes.update(create_plan_meals_attributes(plan_meals))
+
+    # build speech_output from above processing
+    speech_output = build_speech_from_plan(plan_type, plan_meals)
+
+    reprompt_text = ". You can ask for meal plan information by saying, " \
+                    "what's my meal plan?"
+    
+    return build_response(session_attributes, build_speechlet_response(
+        card_title, speech_output, reprompt_text, should_end_session))
+
+
+# helper that builds speech_output in above function
+def build_speech_from_plan(plan_type, plan_meals):
+    if plan_type and plan_meals:
+        speech_output = "I now know your meal plan is " + \
+                        plan_type + ", and you have " + \
+                        plan_meals + " meals. " + \
+                        "You can ask for meal plan information by saying, " \
+                        "what's my meal plan?"
+    elif plan_type:
         speech_output = "I now know your meal plan is " + \
                         plan_type + \
                         ". You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
-        reprompt_text = ". You can ask for meal plan information by saying, " \
-                        "what's my meal plan?"
-        got_plan_info = True
-
-    '''
-#    if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
-    if 'PlanMeals' in intent['slots']:
-        plan_meals = intent['slots']['PlanMeals']['value']
-        session_attributes.update(create_plan_meals_attributes(plan_meals))
-        speech_output += "I now know you have " + \
+    elif plan_meals:
+        speech_output = "I now know you have " + \
                         plan_type + \
                         " meals. You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
-        reprompt_text = ". You can ask for meal plan information by saying, " \
-                        "what's my meal plan?"
-        got_plan_info = True
-    '''
-
-    if not got_plan_info:
+    else:
         speech_output = "I'm not sure what your meal plan is. " \
-                        "Please try again."
-        reprompt_text = "I'm not sure what your meal plan is. " \
                         "You can tell me your meal plan by saying, " \
                         "\"My meal plan type is Block 210\", or " \
                         "\"My meal plan type is Week.\""
-
-    return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
-
+    return speech_output
+    
 
 def create_plan_type_attributes(plan_type):
     return {"planType": plan_type}
