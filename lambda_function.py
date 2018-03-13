@@ -98,13 +98,19 @@ def set_plan_in_session(intent, session):
     
     card_title = intent['name']
     session_attributes = {}
+    should_end_session = False
 
-    # get meal plan type and count, if they exist
-    if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
+
+    # get meal plan type and count, if a value was provided
+    # the keys "PlanType" and "PlanMeals" will be in the intent, but one or both
+    # can have value
+    # if 'PlanType' in intent['slots'] and intent['slots']['PlanType']['value']:
+    if 'value' in intent['slots']['PlanType']:
         plan_type = intent['slots']['PlanType']['value']
         session_attributes.update(create_plan_type_attributes(plan_type))
 
-    if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
+    # if 'PlanMeals' in intent['slots'] and intent['slots']['PlanMeals']['value']:
+    if 'value' in intent['slots']['PlanMeals']:
         plan_meals = intent['slots']['PlanMeals']['value']
         session_attributes.update(create_plan_meals_attributes(plan_meals))
 
