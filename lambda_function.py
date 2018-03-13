@@ -164,7 +164,7 @@ def gen_target_from_session(intent, session):
 
 
     if "planMeals" in session.get('attributes', {}) and session['attributes']['planMeals']:
-        num_meals = session['attributes']['PlanMeals']
+        num_meals = session['attributes']['planMeals']
         speech_output = "You have " + num_meals + \
                         " meals."
         should_end_session = True
