@@ -155,7 +155,7 @@ def gen_target_from_session(intent, session):
     reprompt_text = None
 
 
-    if "PlanMeals" in session.get('attributes', {}) and session['attributes']['PlanMeals']:
+    if "planMeals" in session.get('attributes', {}) and session['attributes']['planMeals']:
         num_meals = session['attributes']['PlanMeals']
         speech_output = "You have " + num_meals + \
                         " meals."
