@@ -1,0 +1,3 @@
+meal plan
+tell meal plan my meal plan type is block 210
+tell meal plan I have 20 meals. what is my target
