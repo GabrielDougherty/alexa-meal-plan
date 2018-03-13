@@ -98,6 +98,8 @@ def set_plan_in_session(intent, session):
     
     card_title = intent['name']
     session_attributes = {}
+    plan_type = ""
+    plan_meals = ""
     should_end_session = False
 
 
