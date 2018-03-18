@@ -4,7 +4,9 @@
 
 from datetime import datetime, date
 import time
-from enum import Enum
+from enum import Enum # for MealType
+import urllib.request # for downloading PDF
+import PyPDF2 # for parsing PDF
 
 
 class MealType(Enum):
@@ -63,6 +65,33 @@ class MealPlan:
     def __default_start_date(self):
         start_date = date(int(datetime.now().year), 8, 28)
         return start_date
+
+    # return starting year semester
+    def __semester_start():
+        # if the current date is before August, it's Spring
+        # otherwise, it's fall
+        
+        if cur_date.month < 8:
+            return cur_date.year-1
+        else:
+            return cur_date.year
+
+    def __parse_calendar():
+        # calendar URL
+        cal_start = __semester_start()
+        base_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-{}-{}.pdf"
+        cal_url = base_url.format(cal_start, cal_start % 2000 + 1) # i.e., 2017-18
+        cal_html = None
+
+        try:
+            with urllib.request.urlopen(cal_url) as response:
+                cal_html = response.read()
+                
+        except URLError:
+            print("mealplan: No connection to %s" % cal_url)
+
+        return cal_html
+
     
     @property
     def target_meals(self):
