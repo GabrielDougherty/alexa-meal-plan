@@ -114,17 +114,18 @@ class MealPlan:
         }
 
 
+
         # build Thanksgiving break
         # The parentheses might not read correctly
-        breaks['thanksgiving']['start'] = self.__build_break_date(cal_txt, \
-                            "ThanksgivingBreakBegins\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
-        breaks['thanksgiving']['end'] = self.__build_break_date(cal_txt, \
-                            "ThanksgivingBreakEnds\(?ClassesResume8:00am\)?", "LastDayofClass")
+        breaks['thanksgiving']['start'] = build_break_date(cal_txt, "ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
+        breaks['thanksgiving']['end'] = build_break_date(cal_txt, \
+                    "ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDayofClass")
 
         # build Spring break
-        breaks['spring']['start'] = self.__build_break_date(cal_txt, "SpringBreakBegins\(?CloseofClasses\)?", "SpringBreakEnds", 1)
-        breaks['spring']['end'] = self.__build_break_date(cal_txt, \
-                                                 "SpringBreakEnds\(?ClassesResume8:00am\)?", "LastDaytoWithdraw", 1)
+        breaks['spring']['start'] = build_break_date(cal_txt, "SpringBreakBegins(\(?CloseofClasses\)?)?", "SpringBreakEnds", 1)
+        breaks['spring']['end'] = build_break_date(cal_txt, \
+                    "SpringBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDaytoWithdraw", 1)
+    
 
         # print(breaks)
         return breaks

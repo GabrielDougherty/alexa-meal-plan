@@ -9,6 +9,11 @@ def build_break_date(cal_txt, re_begin, re_end, yr_offset=0):
     cal_txt = re.sub(r"\r|\n", "", cal_txt)
     # print(cal_txt[:100])
 
+    # remove spaces. The parser does it sometimes, anyway
+    # cal_txt = re.sub(r"\s", "", cal_txt)
+    cal_txt = cal_txt.replace(" ", "")
+    # print(cal_txt)
+
     # only extract the month and number
     try:
         messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin, re_end), \
@@ -40,24 +45,28 @@ def build_breaks(cal_txt, cal_start):
 
     # build Thanksgiving break
     # The parentheses might not read correctly
-    breaks['thanksgiving']['start'] = build_break_date(cal_txt, "ThanksgivingBreakBegins\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
+    breaks['thanksgiving']['start'] = build_break_date(cal_txt, "ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
     breaks['thanksgiving']['end'] = build_break_date(cal_txt, \
-                    "ThanksgivingBreakEnds\(?ClassesResume8:00am\)?", "LastDayofClass")
+                    "ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDayofClass")
 
     # build Spring break
-    breaks['spring']['start'] = build_break_date(cal_txt, "SpringBreakBegins\(?CloseofClasses\)?", "SpringBreakEnds", 1)
+    breaks['spring']['start'] = build_break_date(cal_txt, "SpringBreakBegins(\(?CloseofClasses\)?)?", "SpringBreakEnds", 1)
     breaks['spring']['end'] = build_break_date(cal_txt, \
-                    "SpringBreakEnds\(?ClassesResume8:00am\)?", "LastDaytoWithdraw", 1)
+                    "SpringBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDaytoWithdraw", 1)
     
 
     print(breaks)
     return breaks
 
 
-cal_start = datetime.now().date().year
+cal_start = datetime.now().date().year-1
 base_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-{}-{}.pdf"
 cal_url = base_url.format(cal_start, cal_start % 2000 + 1) # i.e., 2017-18
 cal_html = None
+
+# dumb... have to hardcode their custom URL. Likely will happen again
+if cal_start == 2017:
+    cal_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
 
 try:
     with urllib.request.urlopen(cal_url, timeout=2) as response:
