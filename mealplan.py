@@ -25,8 +25,8 @@ class MealType(Enum):
 
 class MealPlan:
     def __init__(self, plan_meals, cur_meals, start_date = None):
-        BLOCK_PLANS = [210, 175]
-        WEEK_PLANS = [19, 14, 10]
+        self._BLOCK_PLANS = [210, 175]
+        self._WEEK_PLANS = [19, 14, 10]
 
         # initialize meals, start date
         self.cur_meals = cur_meals
@@ -53,9 +53,9 @@ class MealPlan:
         self._target_meals = self.__det_target_meals(plan_meals)
         
     def __det_plan_type(self, plan_meals):
-        if plan_meals in BLOCK_PLANS:
+        if plan_meals in self._BLOCK_PLANS:
             return MealType.BLOCK
-        elif plan_meals in WEEK_PLANS:
+        elif plan_meals in self._WEEK_PLANS:
             return MealType.WEEK
         else:
             # unsure if this is the right error format
