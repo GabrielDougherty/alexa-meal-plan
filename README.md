@@ -1,6 +1,8 @@
 # Alexa Meal Plan Skill
 An Alexa skill for simplifying meal plan budgeting at Edinboro University of Pennsylvania.
 
+See [here](https://github.com/GabrielDougherty/meal-plan) for "backend" logic
+
 The goal is to be able to answer questions like, "how many meals should I spend today?" given the user's meal plan type (block plan or weekly plan) and current number of meals.
 
 # Cavaeats
