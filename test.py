@@ -4,6 +4,22 @@ import PyPDF2 # for getting PDF into text
 from io import BytesIO # for treating PDF as a file stream
 import re # regex for parsing PDF
 
+def build_break_date(cal_txt, re_begin, re_end, yr_offset=0):
+    # only extract the month and number
+    messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin,re_end), \
+                             cal_txt, re.DOTALL).group(0)
+    # print(messy_thanks)
+
+    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
+
+    # get the "November 2" between the commas, then split it by its space
+    month_parts = re.split("\s", messy_thanks.split(',')[1])
+    # print(month_parts)
+    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
+
+    return date(cal_start+yr_offset, month_number, int(month_parts[1]))
+
+
 def build_breaks(cal_txt, cal_start):
     breaks = {
         'thanksgiving': {},
@@ -19,30 +35,11 @@ def build_breaks(cal_txt, cal_start):
     # build Thanksgiving
     
     # start
-    # only extract the month and number
-    messy_thanks = re.search("S\.C\.O\.T\.S\.\).*.,.*,....ThanksgivingBreakBegins", cal_txt, re.DOTALL).group(0)
-    # print(messy_thanks)
-
-    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
-
-    # get the "November 2" between the commas, then split it by its space
-    month_parts = re.split("\s", messy_thanks.split(',')[1])
-    # print(month_parts)
-    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
-        
-    breaks['thanksgiving']['start'] = date(cal_start, month_number, int(month_parts[1]))
+    breaks['thanksgiving']['start'] = build_break_date(cal_txt, "S\.C\.O\.T\.S\.\)", "ThanksgivingBreakBegins")
 
     # end
-    messy_thanks = re.search("ofClasses\).*.,.*,....ThanksgivingBreakEnds", cal_txt, re.DOTALL).group(0)
-    
-    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
+    breaks['thanksgiving']['end'] = build_break_date(cal_txt, "ofClasses\)", "ThanksgivingBreakEnds")
 
-    # get the "November 2" between the commas, then split it by its space
-    month_parts = re.split("\s", messy_thanks.split(',')[1], re.DOTALL)
-    # print(month_parts)
-    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
-    
-    breaks['thanksgiving']['end'] = date(cal_start+1, month_number, int(month_parts[1]))
     print(breaks)
     return breaks
 
