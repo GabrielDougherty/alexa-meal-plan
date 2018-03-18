@@ -11,32 +11,40 @@ def build_breaks(cal_txt, cal_start):
     }
 
     # remove random newlines
-    cal_txt = cal_txt.rstrip()
+    # this doesn't work for some reason so I have to use the re.DOTALL flag
+    # cal_txt = str(cal_txt).rstrip()
+    # this has newlines: (???)
+    # print(cal_txt[:100].rstrip())
 
     # build Thanksgiving
     
     # start
     # only extract the month and number
     messy_thanks = re.search("S\.C\.O\.T\.S\.\).*.,.*,....ThanksgivingBreakBegins", cal_txt, re.DOTALL).group(0)
-    messy_thanks = re.search(",.*,", messy_thanks).group(0)
+    # print(messy_thanks)
 
-    # get the "November 2" between the commas, then split it by its space
-    month_parts = re.split("\s", messy_thanks.split(',')[1])
-    print(month_parts)
-    month_number = datetime.strptime(month_parts[0][:3], '%b').month
-        
-    breaks['thanksgiving']['start'] = date(cal_start, month_number, int(month_parts[1]))
-
-    # end
-    messy_thanks = re.search("ofClasses).*.,.*,....ThanksgivingBreakEnds", cal_txt).group(0)
-    messy_thanks = re.search(",.*,", messy_thanks).group(0)
+    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
 
     # get the "November 2" between the commas, then split it by its space
     month_parts = re.split("\s", messy_thanks.split(',')[1])
     # print(month_parts)
-    month_number = datetime.strptime(month_parts[0], '%b').month
+    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
+        
+    breaks['thanksgiving']['start'] = date(cal_start, month_number, int(month_parts[1]))
+
+    # end
+    messy_thanks = re.search("ofClasses\).*.,.*,....ThanksgivingBreakEnds", cal_txt, re.DOTALL).group(0)
+    
+    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
+
+    # get the "November 2" between the commas, then split it by its space
+    month_parts = re.split("\s", messy_thanks.split(',')[1], re.DOTALL)
+    # print(month_parts)
+    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
     
     breaks['thanksgiving']['end'] = date(cal_start+1, month_number, int(month_parts[1]))
+    print(breaks)
+    return breaks
 
 
 cal_start = datetime.now().date().year
