@@ -89,6 +89,7 @@ class MealPlan:
                 
         except URLError:
             print("mealplan: No connection to %s" % cal_url)
+            exit(-1)
 
         return cal_html
 

@@ -5,19 +5,30 @@ from io import BytesIO # for treating PDF as a file stream
 import re # regex for parsing PDF
 
 def build_break_date(cal_txt, re_begin, re_end, yr_offset=0):
+    # remove newlines
+    cal_txt = re.sub(r"\r|\n", "", cal_txt)
+    # print(cal_txt[:100])
+
     # only extract the month and number
-    messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin,re_end), \
-                             cal_txt, re.DOTALL).group(0)
+    try:
+        messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin, re_end), \
+                                 cal_txt, re.DOTALL).group(0)
+    except AttributeError:
+        print("build_break_date: building break with `{}` and `{}` failed".format(re_begin, re_end))
+        return
+        # exit(-1)
     # print(messy_thanks)
 
-    messy_thanks = re.search(",.*,", messy_thanks, re.DOTALL).group(0)
+    messy_thanks = re.search(r",.*,", messy_thanks, re.DOTALL).group(0)
 
     # get the "November 2" between the commas, then split it by its space
-    month_parts = re.split("\s", messy_thanks.split(',')[1])
+    month_name = re.search(r"([a-z]|[A-Z])*", messy_thanks.split(',')[1]).group(0)
+    day = re.search(r"\d+", messy_thanks).group(0)
+    # print(messy_thanks.split(',')[1],"||||",month_name, day)
     # print(month_parts)
-    month_number = datetime.strptime(month_parts[0][:3].rstrip(), '%b').month
+    month_number = datetime.strptime(month_name[:3], '%b').month
 
-    return date(cal_start+yr_offset, month_number, int(month_parts[1]))
+    return date(cal_start+yr_offset, month_number, int(day))
 
 
 def build_breaks(cal_txt, cal_start):
@@ -26,19 +37,18 @@ def build_breaks(cal_txt, cal_start):
         'spring': {}
     }
 
-    # remove random newlines
-    # this doesn't work for some reason so I have to use the re.DOTALL flag
-    # cal_txt = str(cal_txt).rstrip()
-    # this has newlines: (???)
-    # print(cal_txt[:100].rstrip())
 
-    # build Thanksgiving
+    # build Thanksgiving break
+    # The parentheses might not read correctly
+    breaks['thanksgiving']['start'] = build_break_date(cal_txt, "ThanksgivingBreakBegins\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
+    breaks['thanksgiving']['end'] = build_break_date(cal_txt, \
+                    "ThanksgivingBreakEnds\(?ClassesResume8:00am\)?", "LastDayofClass")
+
+    # build Spring break
+    breaks['spring']['start'] = build_break_date(cal_txt, "SpringBreakBegins\(?CloseofClasses\)?", "SpringBreakEnds", 1)
+    breaks['spring']['end'] = build_break_date(cal_txt, \
+                    "SpringBreakEnds\(?ClassesResume8:00am\)?", "LastDaytoWithdraw", 1)
     
-    # start
-    breaks['thanksgiving']['start'] = build_break_date(cal_txt, "S\.C\.O\.T\.S\.\)", "ThanksgivingBreakBegins")
-
-    # end
-    breaks['thanksgiving']['end'] = build_break_date(cal_txt, "ofClasses\)", "ThanksgivingBreakEnds")
 
     print(breaks)
     return breaks
@@ -50,7 +60,7 @@ cal_url = base_url.format(cal_start, cal_start % 2000 + 1) # i.e., 2017-18
 cal_html = None
 
 try:
-    with urllib.request.urlopen(cal_url) as response:
+    with urllib.request.urlopen(cal_url, timeout=2) as response:
         # this whole method is fairly fragile because the formatting could change in their PDF
 
         cal_html = response.read()
