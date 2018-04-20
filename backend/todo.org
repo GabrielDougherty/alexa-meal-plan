@@ -1,0 +1,3 @@
+*Meal Plan Notes*
+* MealPlan class interface
+** get target daily usage
