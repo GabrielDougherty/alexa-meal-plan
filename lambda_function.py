@@ -208,5 +208,5 @@ def build_response(session_attributes, speechlet_response):
         'version': '1.0',
         'sessionAttributes': session_attributes,
         'response': speechlet_response
-}
+    }
 
