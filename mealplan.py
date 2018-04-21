@@ -25,6 +25,8 @@ class MealType(Enum):
 
 class MealPlan:
     def __init__(self, plan_meals, cur_meals, start_date=None):
+        plan_meals = int(plan_meals)
+        cur_meals = int(cur_meals)
         self._BLOCK_PLANS = [210, 175]
         self._WEEK_PLANS = [19, 14, 10]
 
@@ -59,7 +61,7 @@ class MealPlan:
             return MealType.WEEK
         else:
             # unsure if this is the right error format
-            raise ValueError("Invalid block plan")
+            raise ValueError(f"Invalid meal plan: {plan_meals}")
 
     def __det_target_meals(self, plan_meals):
         return self.cur_meals/plan_meals
@@ -171,6 +173,10 @@ class MealPlan:
         except urllib.request.URLError:
             print("mealplan: No connection to %s" % cal_url)
             exit(-1)
+
+    # def __days_remaining(self):
+    #     if self._plan_type == MealType.BLOCK:
+    #         remaining = 
 
     @property
     def target_meals(self):
