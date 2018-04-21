@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Playing with time in Python
 from datetime import datetime, date
-import urllib.request # for downloading PDF
-import PyPDF2 # for getting PDF into text
-from io import BytesIO # for treating PDF as a file stream
-import re # regex for parsing PDF
+import urllib.request 	# for downloading PDF
+import PyPDF2 		# for getting PDF into text
+from io import BytesIO 	# for treating PDF as a file stream
+import re 		# regex for parsing PDF
 import time
-from enum import Enum # for MealType
+from enum import Enum 	# for MealType
 
 
 class MealType(Enum):
@@ -24,7 +24,7 @@ class MealType(Enum):
 # target_meals: target number of meals to spend each day
 
 class MealPlan:
-    def __init__(self, plan_meals, cur_meals, start_date = None):
+    def __init__(self, plan_meals, cur_meals, start_date=None):
         self._BLOCK_PLANS = [210, 175]
         self._WEEK_PLANS = [19, 14, 10]
 
@@ -51,7 +51,7 @@ class MealPlan:
 
         # determine target meals per day
         self._target_meals = self.__det_target_meals(plan_meals)
-        
+
     def __det_plan_type(self, plan_meals):
         if plan_meals in self._BLOCK_PLANS:
             return MealType.BLOCK
@@ -74,26 +74,37 @@ class MealPlan:
     def __semester_start(self):
         # if the current date is before August, it's Spring
         # otherwise, it's fall
-        
+
         if self._cur_date.month < 8:
             return self._cur_date.year-1
         else:
             return self._cur_date.year
 
-    def __build_break_date(self, cal_txt, re_begin, re_end, yr_offset=0):
+    def __build_break_date(self, cal_txt, re_begin, re_end):
         # remove newlines
         cal_txt = re.sub(r"\r|\n", "", cal_txt)
+        # remove spaces (they're unreliable)
+        cal_txt = re.sub(r"\s", "", cal_txt)
         # print(cal_txt[:100])
 
         # only extract the month and number
-        try:
-            messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin, re_end), \
+        # try:
+        print(cal_txt)
+        messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin, re_end), \
                                      cal_txt, re.DOTALL).group(0)
-        except AttributeError:
-            print("build_break_date: building break with `{}` and `{}` failed".format(re_begin, re_end))
-            return
+        # except AttributeError:
+        #     print("build_break_date: building break with `{}` and `{}` failed".format(re_begin, re_end))
+        #     return
         # exit(-1)
+        # print('*' * 50, "\n\n")
         # print(messy_thanks)
+        # print('*' * 50, "\n\n")
+
+        right_offset = len(re_end)
+        year_name = messy_thanks[(-4-right_offset):-right_offset]
+        # print("year:",year)
+        # print("re_end:",re_end)
+        # print('*' * 50, "\n\n")
 
         messy_thanks = re.search(r",.*,", messy_thanks, re.DOTALL).group(0)
 
@@ -104,7 +115,7 @@ class MealPlan:
         # print(month_parts)
         month_number = datetime.strptime(month_name[:3], '%b').month
 
-        return date(cal_start+yr_offset, month_number, int(day))
+        return date(int(year_name), month_number, int(day))
 
 
     def __build_breaks(self, cal_txt, cal_start):
@@ -117,15 +128,15 @@ class MealPlan:
 
         # build Thanksgiving break
         # The parentheses might not read correctly
-        breaks['thanksgiving']['start'] = build_break_date(cal_txt, "ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
-        breaks['thanksgiving']['end'] = build_break_date(cal_txt, \
-                    "ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDayofClass")
+        breaks['thanksgiving']['start'] = self.__build_break_date(cal_txt, r"ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
+        breaks['thanksgiving']['end'] = self.__build_break_date(cal_txt, \
+                    r"ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDayofClass")
 
         # build Spring break
-        breaks['spring']['start'] = build_break_date(cal_txt, "SpringBreakBegins(\(?CloseofClasses\)?)?", "SpringBreakEnds", 1)
-        breaks['spring']['end'] = build_break_date(cal_txt, \
-                    "SpringBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDaytoWithdraw", 1)
-    
+        breaks['spring']['start'] = self.__build_break_date(cal_txt, r"SpringBreakBegins(\(?CloseofClasses\)?)?", "SpringBreakEnds")
+        breaks['spring']['end'] = self.__build_break_date(cal_txt, \
+                    r"SpringBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDaytoWithdraw")
+
 
         # print(breaks)
         return breaks
@@ -139,11 +150,11 @@ class MealPlan:
         # dumb... have to hardcode their custom URL. Likely will happen again
         if cal_start == 2017:
             cal_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
-            
+
         try:
             with urllib.request.urlopen(cal_url, timeout=2) as response:
                 # this whole method is fairly fragile because the formatting could change in their PDF
-                
+
                 cal_html = response.read()
 
                 # used the example from https://automatetheboringstuff.com/chapter13/
@@ -156,7 +167,7 @@ class MealPlan:
                 cal_txt = calReader.getPage(0).extractText()
 
                 return self.__build_breaks(cal_txt, cal_start)
-        
+
         except urllib.request.URLError:
             print("mealplan: No connection to %s" % cal_url)
             exit(-1)
@@ -168,4 +179,4 @@ class MealPlan:
     @property
     def plan_type(self):
         return self._plan_type
-    
+
