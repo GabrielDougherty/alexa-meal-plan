@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Playing with time in Python
 from datetime import datetime, date
-import urllib.request # for downloading PDF
-import PyPDF2 # for getting PDF into text
-from io import BytesIO # for treating PDF as a file stream
-import re # regex for parsing PDF
+import urllib.request 	# for downloading PDF
+import PyPDF2 		# for getting PDF into text
+from io import BytesIO 	# for treating PDF as a file stream
+import re 		# regex for parsing PDF
 import time
-from enum import Enum # for MealType
+from enum import Enum 	# for MealType
 
 
 class MealType(Enum):
@@ -51,7 +51,7 @@ class MealPlan:
 
         # determine target meals per day
         self._target_meals = self.__det_target_meals(plan_meals)
-        
+
     def __det_plan_type(self, plan_meals):
         if plan_meals in self._BLOCK_PLANS:
             return MealType.BLOCK
@@ -139,11 +139,11 @@ class MealPlan:
         # dumb... have to hardcode their custom URL. Likely will happen again
         if cal_start == 2017:
             cal_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
-            
+
         try:
             with urllib.request.urlopen(cal_url, timeout=2) as response:
                 # this whole method is fairly fragile because the formatting could change in their PDF
-                
+
                 cal_html = response.read()
 
                 # used the example from https://automatetheboringstuff.com/chapter13/
@@ -156,7 +156,7 @@ class MealPlan:
                 cal_txt = calReader.getPage(0).extractText()
 
                 return self.__build_breaks(cal_txt, cal_start)
-        
+
         except urllib.request.URLError:
             print("mealplan: No connection to %s" % cal_url)
             exit(-1)
@@ -168,4 +168,4 @@ class MealPlan:
     @property
     def plan_type(self):
         return self._plan_type
-    
+
