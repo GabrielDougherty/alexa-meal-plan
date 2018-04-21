@@ -33,7 +33,7 @@ class MealPlan:
         self._cur_date = datetime.now().date()
 
         self._breaks = self.__parse_calendar()
-        print(self._breaks)
+        # print(self._breaks)
 
         # handle default start date
         if start_date is None:
@@ -89,7 +89,7 @@ class MealPlan:
 
         # only extract the month and number
         # try:
-        print(cal_txt)
+        # print(cal_txt)
         messy_thanks = re.search("{}.*.,.*,....{}".format(re_begin, re_end), \
                                      cal_txt, re.DOTALL).group(0)
         # except AttributeError:
