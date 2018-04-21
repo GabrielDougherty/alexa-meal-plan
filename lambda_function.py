@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-import urllib.request
-import json
+import sys
+
+sys.path.append('./backend')
+import mealplan
 
 def lambda_handler(event, context):
     # check if application ID is right
