@@ -162,17 +162,28 @@ def create_plan_meals_attributes(plan_meals):
 
 def gen_target_from_session(intent, session):
     session_attributes = {}
+    session_attributes = session.get('attributes', {})
     reprompt_text = None
 
+    
+    if "planMeals" in session_attributes \
+       and "currentMeals" in session_attributes:
+        plan_meals = session['attributes']['planMeals']
+        cur_meals = session['attributes']['curMeals']
 
-    if "planMeals" in session.get('attributes', {}) and session['attributes']['planMeals']:
-        num_meals = session['attributes']['planMeals']
-        speech_output = "You have " + num_meals + \
+        plan = mealplan.MealPlan(plan_meals, cur_meals)
+        target_meals = mealplan.target_meals
+        
+        speech_output = "Your target is " + target_meals + \
                         " meals."
         should_end_session = True
+    # if "planMeals" in session.get('attributes', {}) and session['attributes']['planMeals']:
+    #     num_meals = session['attributes']['planMeals']
+    #     speech_output = "You have " + num_meals + \
+    #                     " meals."
+    #     should_end_session = True
     else:
-        speech_output = "I'm not sure what your meal plan is. " \
-                        "You can say, I have a block meal plan."
+        speech_output = "I'm not sure what your target is. "
         should_end_session = False
 
     # Setting reprompt_text to None signifies that we do not want to reprompt
