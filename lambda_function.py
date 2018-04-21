@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append('./backend')
+# sys.path.append('./backend')
 import mealplan
 
 def lambda_handler(event, context):
@@ -11,7 +11,7 @@ def lambda_handler(event, context):
             "amzn1.ask.skill.0b57ef85-b53b-4317-9b55-4f417d83c822"):
         raise ValueError("Invalid Application ID")
 
-    
+
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
                            event['session'])
@@ -97,9 +97,10 @@ def set_plan_in_session(intent, session):
     """ Sets the plan in the session and prepares the speech to reply to the
     user.
     """
-    
+
     card_title = intent['name']
-    session_attributes = {}
+    # TODO: verify below is correct
+    session_attributes = session
     plan_type = None
     plan_meals = None
     should_end_session = False
@@ -123,7 +124,7 @@ def set_plan_in_session(intent, session):
 
     reprompt_text = ". You can ask for meal plan information by saying, " \
                     "what's my meal plan?"
-    
+
     return build_response(session_attributes, build_speechlet_response(
         card_title, speech_output, reprompt_text, should_end_session))
 
@@ -152,7 +153,7 @@ def build_speech_from_plan(plan_type, plan_meals):
                         "\"My meal plan type is Block 210\", or " \
                         "\"My meal plan type is Week.\""
     return speech_output
-    
+
 
 def create_plan_type_attributes(plan_type):
     return {"planType": plan_type}
@@ -160,21 +161,28 @@ def create_plan_type_attributes(plan_type):
 def create_plan_meals_attributes(plan_meals):
     return {"planMeals": plan_meals}
 
+def create_current_meals_attributes(current_meals):
+    return {"currentMeals": current_meals}
+
 def gen_target_from_session(intent, session):
-    session_attributes = {}
     session_attributes = session.get('attributes', {})
     reprompt_text = None
 
-    
+    if 'CurrentMeals' in intent['slots'] \
+       and 'value' in intent['slots']['CurrentMeals']:
+        current_meals = intent['slots']['CurrentMeals']['value']
+        session_attributes.update(create_current_meals_attributes(current_meals))
+
+
     if "planMeals" in session_attributes \
        and "currentMeals" in session_attributes:
         plan_meals = session['attributes']['planMeals']
-        cur_meals = session['attributes']['curMeals']
+        cur_meals = session['attributes']['currentMeals']
 
         plan = mealplan.MealPlan(plan_meals, cur_meals)
-        target_meals = mealplan.target_meals
-        
-        speech_output = "Your target is " + target_meals + \
+        target_meals = plan.target_meals
+
+        speech_output = "Your target is " + str(target_meals)[:5] + \
                         " meals."
         should_end_session = True
     # if "planMeals" in session.get('attributes', {}) and session['attributes']['planMeals']:
