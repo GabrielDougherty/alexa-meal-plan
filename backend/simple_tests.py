@@ -17,5 +17,5 @@ def simple_tests():
         print("This should have been caught.")
 
 # uncomment this line for running as regular executable
-#if __name__ == "__main__":
-simple_tests()
+if __name__ == "__main__":
+    simple_tests()
