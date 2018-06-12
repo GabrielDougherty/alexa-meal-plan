@@ -32,17 +32,6 @@ class MealPlan:
 
         # initialize meals, start date
         self.cur_meals = cur_meals
-        self._cur_date = datetime.now().date()
-
-        self._dates = self.__parse_calendar()
-        # print(self._dates)
-
-        # handle default start date
-        if start_date is None:
-            self.start_date = self.__default_start_date()
-        else:
-            # otherwise, set to given date
-            self.start_date = start_date
 
         # determine meal plan type
         # try:
@@ -66,9 +55,63 @@ class MealPlan:
     def __det_target_meals(self, plan_meals):
         return self.cur_meals/plan_meals
 
+    @property
+    def target_meals(self):
+        return self._target_meals
+
+    @property
+    def plan_type(self):
+        return self._plan_type
+
+
+#----------Begin Date Handler class----------
+class DateHandler:
+    def __init__(self, start_date=None):
+        self._cur_date = datetime.now().date()
+
+
+        # handle default start date
+        if start_date is None:
+            self.start_date = self.__default_start_date()
+        else:
+            # otherwise, set to given date
+            self.start_date = start_date
+        
+
+    def __parse_calendar(self):
+        # calendar URL
+        cal_start = self.__semester_start()
+        base_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-{}-{}.pdf"
+        cal_url = base_url.format(cal_start, cal_start % 2000 + 1) # i.e., 2017-18
+
+        # dumb... have to hardcode their custom URL. Likely will happen again
+        if cal_start == 2017:
+            cal_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
+
+        try:
+            with urllib.request.urlopen(cal_url, timeout=2) as response:
+                # this whole method is fairly fragile because the formatting could change in their PDF
+
+                cal_html = response.read()
+
+                # used the example from https://automatetheboringstuff.com/chapter13/
+                calReader = PyPDF2.PdfFileReader(BytesIO(cal_html))
+
+                # breaks are marked by SpringBreak{Begins,Ends} and
+                # ThanksGivingBreak{Begins,Ends}
+
+                # print(calReader.getPage(0).extractText())
+                cal_txt = calReader.getPage(0).extractText()
+
+                return self.__build_dates(cal_txt, cal_start)
+
+        except urllib.request.URLError:
+            print("mealplan: No connection to %s" % cal_url)
+            exit(-1)
+
     # default start date is August 28 of current year
     # this is correct for 2017
-    def __default_start_date(self):
+    def __default_start_date(self): 
         start_date = date(int(datetime.now().year), 8, 28)
         return start_date
 
@@ -135,27 +178,37 @@ class MealPlan:
 
 
     def __build_dates(self, cal_txt, cal_start):
-        dates = {
-            'thanksgivingBreak': {},
-            'springBreak': {},
-            'springSemester': {},
-            'fallSemester':{}
-        }
 
+        startDates = []
+        endDates = []
 
+        startBreaksArgs = [
+            [ r"ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?",
+              "ThanksgivingBreakEnds" ],
+            [ r"SpringBreakBegins(\(?CloseofClasses\)?)?",
+              "SpringBreakEnds" ],
+        ]
+
+        endBreakArgs = [
+            [ r"ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?",
+              "LastDayofClass" ],
+            [ r"SpringBreakEnds\(?ClassesResume\-?8:00am\)?",
+              "LastDaytoWithdraw" ],
+        ]
+
+        
 
         # build Thanksgiving break
         # The parentheses might not read correctly
-        dates['thanksgivingBreak']['start'] = self.__build_break_date(cal_txt, \
-                    r"ThanksgivingBreakBegins(at)?\(?CloseofClasses\)?", "ThanksgivingBreakEnds")
+        startDates.append( self.__build_break_date(cal_txt, \
+
         dates['thanksgivingBreak']['end'] = self.__build_break_date(cal_txt, \
-                    r"ThanksgivingBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDayofClass")
+              
 
         # build Spring break
         dates['springBreak']['start'] = self.__build_break_date(cal_txt, \
-                    r"SpringBreakBegins(\(?CloseofClasses\)?)?", "SpringBreakEnds")
+            
         dates['springBreak']['end'] = self.__build_break_date(cal_txt, \
-                    r"SpringBreakEnds\(?ClassesResume\-?8:00am\)?", "LastDaytoWithdraw")
 
         # build Fall semester start and end dates
         dates['fallSemester']['start'] = self.__build_break_date(cal_txt, r"ClassesBegin",
@@ -166,51 +219,16 @@ class MealPlan:
         # build Spring semester start and end dates
         dates['springSemester']['start'] = self.__build_break_date(cal_txt, r"ClassesBegin",
                                                                  r"LastDaytoDrop", cal_start+1)
-        dates['springSemester']['start'] = self.__build_break_date(cal_txt, r"EndofSemester",
+        dates['springSemester']['end'] = self.__build_break_date(cal_txt, r"EndofSemester",
                                                                  r"Commencement", cal_start+1)
         print(dates)
         return dates
 
-    def __parse_calendar(self):
-        # calendar URL
-        cal_start = self.__semester_start()
-        base_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-{}-{}.pdf"
-        cal_url = base_url.format(cal_start, cal_start % 2000 + 1) # i.e., 2017-18
-
-        # dumb... have to hardcode their custom URL. Likely will happen again
-        if cal_start == 2017:
-            cal_url = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
-
-        try:
-            with urllib.request.urlopen(cal_url, timeout=2) as response:
-                # this whole method is fairly fragile because the formatting could change in their PDF
-
-                cal_html = response.read()
-
-                # used the example from https://automatetheboringstuff.com/chapter13/
-                calReader = PyPDF2.PdfFileReader(BytesIO(cal_html))
-
-                # breaks are marked by SpringBreak{Begins,Ends} and
-                # ThanksGivingBreak{Begins,Ends}
-
-                # print(calReader.getPage(0).extractText())
-                cal_txt = calReader.getPage(0).extractText()
-
-                return self.__build_dates(cal_txt, cal_start)
-
-        except urllib.request.URLError:
-            print("mealplan: No connection to %s" % cal_url)
-            exit(-1)
 
     def __days_remaining(self):
+
         if self._plan_type == MealType.BLOCK:
-            pass #TODO
-        
-    @property
-    def target_meals(self):
-        return self._target_meals
-
-    @property
-    def plan_type(self):
-        return self._plan_type
-
+            pass #TODO get all days remaining
+        else if self._plan_type == MealType.WEEK:
+            if 
+    
