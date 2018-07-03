@@ -72,22 +72,7 @@ class CalParser:
     def __init__(self, cal_start=None):
         self._cur_date = datetime.now().date()
 
-        # handle default start date
-        if cal_start is None:
-            self._cal_start = self.__default_start_date()
-        else:
-            # otherwise, set to given date
-            self._cal_start = cal_start
-
-    # return starting year semester
-    def __semester_start(self):
-        # if the current date is before August, it's Spring
-        # otherwise, it's fall
-
-        if self._cur_date.month < 8:
-            return self._cur_date.year - 1
-        else:
-            return self._cur_date.year
+        self._cal_start = cal_start
 
     def gen_cal_txt(self) -> str:
         cal_txt = self.__parse_calendar()
@@ -261,14 +246,24 @@ class BreakBuilder:
 
 
 class DaysRemaining:
-    def __init__(self):
+    def __init__(self):  # TODO: paramaterize classes as interfaces
         self._cal_start = self.__semester_start()
+
+        self._cur_date = datetime.now().date()
 
         parser = CalParser()
 
         self._cal_txt = parser.gen_cal_txt()
 
+    # return starting year semester
+    def __semester_start(self):
+        # if the current date is before August, it's Spring
+        # otherwise, it's fall
 
+        if self._cur_date.month < 8:
+            return self._cur_date.year - 1
+        else:
+            return self._cur_date.year
 
     # default start date is August 28 of current year
     # this is correct for 2017
@@ -276,14 +271,33 @@ class DaysRemaining:
         start_date = date(int(datetime.now().year), 8, 28)
         return start_date
 
+    # returns val <= 0 if invalid range
     def days_remaining_until(self, till_date):
-        remaining = -1
-
-        cur_date = datetime.now().date()
+        remaining = 0
 
         breakbuilder = BreakBuilder(self._cal_txt, self._cal_start)
         dates = breakbuilder.built_dates
 
+        
+        if dates.start_sem <= self._cur_date <= dates.end_sem:
+            remaining = till_date - self._cur_date + 1
+            for start, end in zip(dates.start_breaks, dates.end_breaks):
+                remaining -= self.__date_intersection(start, end, self._cur_date, till_date)
 
-        if cur_date < dates.end_sem and cur_date > dates.start_sem:
-            pass
+                if remaining <= 0:
+                    return remaining
+
+        return remaining
+
+    def __days_between(self, day1, day2):
+        return (day1-day2).days
+
+    # see: https://stackoverflow.com/a/9044111/2303560
+    def __date_intersection(self, start1, end1, start2, end2):
+        latest_start = max(start1, start2)
+        earliest_end = max(end1, end2)
+
+        delta = (earliest_end - latest_start).days + 1
+        overlap = max(0, delta)
+
+        return overlap
