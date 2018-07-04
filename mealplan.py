@@ -6,6 +6,7 @@ import urllib.request  # for downloading PDF
 from io import BytesIO  # for treating PDF as a file stream
 import re  # regex for parsing PDF
 from enum import Enum  # for MealType
+import calendar
 import PyPDF2  # for getting PDF into text
 
 
@@ -25,14 +26,14 @@ class MealType(Enum):
 
 
 class MealPlan:
-    def __init__(self, plan_meals, cur_meals, start_date=None):
+    def __init__(self, plan_meals, _cur_meals):
         plan_meals = int(plan_meals)
-        cur_meals = int(cur_meals)
+        self._cur_meals = int(_cur_meals)
         self._BLOCK_PLANS = [210, 175]
         self._WEEK_PLANS = [19, 14, 10]
 
         # initialize meals, start date
-        self.cur_meals = cur_meals
+        self._cur_meals = _cur_meals
 
         # determine meal plan type
         # try:
@@ -41,7 +42,7 @@ class MealPlan:
         #     print("MealPlan needs MealType to work. Please import MealType.")
 
         # determine target meals per day
-        self._target_meals = self.__det_target_meals(plan_meals)
+        self._target_meals = self.__det_target_meals()
 
     def __det_plan_type(self, plan_meals):
         if plan_meals in self._BLOCK_PLANS:
@@ -52,12 +53,24 @@ class MealPlan:
             # unsure if this is the right error format
             raise ValueError(f"Invalid meal plan: {plan_meals}")
 
-    def __det_target_meals(self, plan_meals):
-        return self.cur_meals / plan_meals
+    def __det_target_meals(self):
+        target = None
+        rem = DaysRemaining()
+
+        if self._plan_type == MealType.BLOCK:
+            target = self._cur_meals/rem.days_remaining_until(rem.semester_end)
+        elif self._plan_type == MealType.WEEK:
+            today = rem.cur_date
+
+            sunday = today + (today.weekday() % calendar.SUNDAY).days
+            target = rem.days_remaining_until(sunday)
+
+        return target
 
     # get number of days remaining before last_day
     def __days_remaining(self, last_day):
-        pass
+        rem = DaysRemaining()
+        return rem.days_remaining_until(last_day)
 
     @property
     def target_meals(self):
@@ -66,6 +79,10 @@ class MealPlan:
     @property
     def plan_type(self):
         return self._plan_type
+
+    @property
+    def cur_meals(self):
+        return self._cur_meals
 
 
 class CalParser:
@@ -93,13 +110,14 @@ class CalParser:
 
     def __parse_calendar(self):
         # calendar URL
-        cal_start_yr = self.__semester_start()
+        cal_start_yr = 2018  # TODO: change
         BASE_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-{}-{}.pdf"
-        CAL_URL = BASE_URL.format(cal_start_yr, cal_start_yr % 2000 + 1)  # i.e., 2017-18
+        CAL_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2018-19%20rev41818.pdf";
+        # CAL_URL = BASE_URL.format(cal_start_yr, cal_start_yr % 2000 + 1)  # i.e., 2017-18
 
         # dumb... have to hardcode their custom URL. Likely will happen again
         if cal_start_yr == 2017:
-            CAL_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2017-18-2.pdf"
+            CAL_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2018-19%20rev41818.pdf"
 
         try:
             with urllib.request.urlopen(CAL_URL, timeout=2) as response:
@@ -121,7 +139,6 @@ class CalParser:
         except urllib.request.URLError:
             print("mealplan: No connection to %s" % CAL_URL)
             exit(-1)
-
 
 
 class SemesterDates:
@@ -147,6 +164,7 @@ class SemesterDates:
     def end_sem(self):
         return self._end_sem
 
+
 class BreakBuilder:
     _dates: SemesterDates
 
@@ -156,6 +174,8 @@ class BreakBuilder:
 
     def __build_break_date(self, re_begin, re_end, semester_yr=None):
         # remove newlines
+
+        messy_date = ""
 
         # only extract the month and number
         try:
@@ -238,7 +258,7 @@ class BreakBuilder:
         append_built_date(start_sem, start_sem_args)
         append_built_date(end_sem, end_sem_args)
 
-        return SemesterDates(start_breaks,end_breaks,start_sem,end_sem)
+        return SemesterDates(start_breaks, end_breaks, start_sem, end_sem)
 
     @property
     def built_dates(self):
@@ -247,13 +267,14 @@ class BreakBuilder:
 
 class DaysRemaining:
     def __init__(self):  # TODO: paramaterize classes as interfaces
+        self._cur_date = datetime.now().date()
         self._cal_start = self.__semester_start()
 
-        self._cur_date = datetime.now().date()
-
         parser = CalParser()
-
         self._cal_txt = parser.gen_cal_txt()
+
+        builder = BreakBuilder(self._cal_txt, self._cal_start)
+        self._semester_end = builder.built_dates.end_sem
 
     # return starting year semester
     def __semester_start(self):
@@ -278,9 +299,8 @@ class DaysRemaining:
         breakbuilder = BreakBuilder(self._cal_txt, self._cal_start)
         dates = breakbuilder.built_dates
 
-        
         if dates.start_sem <= self._cur_date <= dates.end_sem:
-            remaining = till_date - self._cur_date + 1
+            remaining = (till_date - self._cur_date).days + 1
             for start, end in zip(dates.start_breaks, dates.end_breaks):
                 remaining -= self.__date_intersection(start, end, self._cur_date, till_date)
 
@@ -301,3 +321,11 @@ class DaysRemaining:
         overlap = max(0, delta)
 
         return overlap
+
+    @property
+    def semester_end(self):
+        return self._semester_end
+
+    @property
+    def cur_date(self):
+        return self._cur_date
