@@ -115,10 +115,6 @@ class CalParser:
         CAL_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2018-19%20rev41818.pdf";
         # CAL_URL = BASE_URL.format(cal_start_yr, cal_start_yr % 2000 + 1)  # i.e., 2017-18
 
-        # dumb... have to hardcode their custom URL. Likely will happen again
-        if cal_start_yr == 2017:
-            CAL_URL = "http://www.edinboro.edu/directory/offices-services/records/academic-calendars/Academic-Calendar-2018-19%20rev41818.pdf"
-
         try:
             with urllib.request.urlopen(CAL_URL, timeout=2) as response:
                 # this whole method is fairly fragile because the formatting could change in their PDF
@@ -182,18 +178,20 @@ class BreakBuilder:
             # explicitly specify year in search if getting semest start and end dates
             if semester_yr:
                 yr_re_end = str(semester_yr) + re_end
-                print(yr_re_end, re_begin)
+                # print(yr_re_end, re_begin)
                 # TODO fix bug here
                 messy_date = re.search("{}.*.,.*?,{}".format(re_begin,
                                                              yr_re_end), self._cal_txt, re.DOTALL).group(0)
             else:
-                print(re_end, re_begin)
+                # print(re_end, re_begin)
 
                 messy_date = re.search("{}.*?.,.*?,....{}".format(re_begin,
                                                                   re_end), self._cal_txt, re.DOTALL).group(0)
             # /ClassesBegin.*.,.*,....LaborDay
-        except AttributeError:
+        except AttributeError as err:
             print("build_break_date: building break with `{}` and `{}` failed".format(re_begin, re_end))
+            print(err)
+            print(f"cal_txt {self._cal_txt}")
             exit(-1)
 
         right_offset = len(re_end)
@@ -240,8 +238,8 @@ class BreakBuilder:
 
         start_sem_args = [
             # fall semester
-            [r"ClassesBegin", r"LaborDay", cal_start],
-            [r"ClassesBegin", r"LastDaytoDrop", cal_start + 1],
+            [f"FallSemester{cal_start}", r"LaborDay", cal_start],
+            [f"SpringSemester{cal_start + 1}ClassesBegin", r"LastDaytoDrop", cal_start + 1],
         ]
 
         end_sem_args = [
@@ -251,7 +249,7 @@ class BreakBuilder:
 
         def append_built_date(dates, args):
             for arg in args:
-                dates.append(self.__build_break_date(self._cal_txt, *arg))  # unpacks args
+                dates.append(self. __build_break_date(*arg))  # unpacks args
 
         append_built_date(start_breaks, start_breaks_args)
         append_built_date(end_breaks, end_break_args)
@@ -266,11 +264,11 @@ class BreakBuilder:
 
 
 class DaysRemaining:
-    def __init__(self):  # TODO: paramaterize classes as interfaces
+    def __init__(self, cal_start=None):  # TODO: parametrize classes as interfaces
         self._cur_date = datetime.now().date()
-        self._cal_start = self.__semester_start()
+        self._cal_start = cal_start or self.__semester_start()
 
-        parser = CalParser()
+        parser = CalParser(cal_start=cal_start)
         self._cal_txt = parser.gen_cal_txt()
 
         builder = BreakBuilder(self._cal_txt, self._cal_start)
@@ -286,6 +284,9 @@ class DaysRemaining:
         else:
             return self._cur_date.year
 
+    def __is_fall(self) -> bool:
+        return self._cur_date.year == self.cur_date.year
+
     # default start date is August 28 of current year
     # this is correct for 2017
     def __default_start_date(self):
@@ -299,7 +300,11 @@ class DaysRemaining:
         breakbuilder = BreakBuilder(self._cal_txt, self._cal_start)
         dates = breakbuilder.built_dates
 
-        if dates.start_sem <= self._cur_date <= dates.end_sem:
+        print(dates.start_sem, 5 * '*', self._cur_date, 5 * '*', dates.end_sem)
+
+        sem_index = 0 if self.__is_fall() else 1
+
+        if dates.start_sem[sem_index] <= self._cur_date <= dates.end_sem[sem_index]:
             remaining = (till_date - self._cur_date).days + 1
             for start, end in zip(dates.start_breaks, dates.end_breaks):
                 remaining -= self.__date_intersection(start, end, self._cur_date, till_date)
