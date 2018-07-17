@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import sys
+# import sys
 
 # sys.path.append('./backend')
 import mealplan
+
 
 def lambda_handler(event, context):
     # check if application ID is right
     if (event['session']['application']['applicationId'] !=
             "amzn1.ask.skill.0b57ef85-b53b-4317-9b55-4f417d83c822"):
         raise ValueError("Invalid Application ID")
-
 
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
@@ -105,7 +105,6 @@ def set_plan_in_session(intent, session):
     plan_meals = None
     should_end_session = False
 
-
     # get meal plan type and count, if a value was provided
     # the keys "PlanType" and "PlanMeals" will be in the intent, but one or both
     # can have value
@@ -144,7 +143,7 @@ def build_speech_from_plan(plan_type, plan_meals):
                         "what's my meal plan?"
     elif plan_meals:
         speech_output = "I now know you have " + \
-                        plan_type + \
+                        plan_meals + \
                         " meals. You can ask for meal plan information by saying, " \
                         "what's my meal plan?"
     else:
@@ -158,11 +157,14 @@ def build_speech_from_plan(plan_type, plan_meals):
 def create_plan_type_attributes(plan_type):
     return {"planType": plan_type}
 
+
 def create_plan_meals_attributes(plan_meals):
     return {"planMeals": plan_meals}
 
+
 def create_current_meals_attributes(current_meals):
     return {"currentMeals": current_meals}
+
 
 def gen_target_from_session(intent, session):
     session_attributes = session.get('attributes', {})
@@ -172,7 +174,6 @@ def gen_target_from_session(intent, session):
        and 'value' in intent['slots']['CurrentMeals']:
         current_meals = intent['slots']['CurrentMeals']['value']
         session_attributes.update(create_current_meals_attributes(current_meals))
-
 
     if "planMeals" in session_attributes \
        and "currentMeals" in session_attributes:
@@ -230,4 +231,3 @@ def build_response(session_attributes, speechlet_response):
         'sessionAttributes': session_attributes,
         'response': speechlet_response
     }
-
