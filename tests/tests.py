@@ -7,6 +7,33 @@ sys.path.append("..")
 
 import mealplan
 
+class TestParser(mealplan.ICalParser):
+    def init(self, cal_start):
+        pass
+
+    def gen_cal_txt(self):
+        return "FallSemester2018ClassesBeginMonday,August27,2018LaborDay(NoClasses)Monday,September3," \
+              "2018LastDaytoDrop-Add4:30pmatHamiltonHallTuesday,September4,201811:59pmusingS.C.O.T.S.Tuesday," \
+              "September4,2018ReadingDay(NoClasses)Tuesday,October9,2018LastDaytoWithdraw(" \
+              "11:59pmusingS.C.O.T.S.)Friday,November2,2108ThanksgivingBreakBegins(CloseofClasses)Tuesday,November20," \
+              "2018ThanksgivingBreakEnds(ClassesResume-8:00am)Monday,November26,2018LastDayofClassFriday,December7," \
+              "2018FinalExamPeriodBeginsMonday,December10,2018EndofSemesterFriday,December14," \
+              "2018CommencementSaturday,December15,2018SpringSemester2019ClassesBeginMonday,January14," \
+              "2019MartinLutherKingDay(NoClasses)Monday,January21,2019LastdaytoDrop-Add4:30pmatHamiltonHallTuesday," \
+              "January22,201911:59pmusingS.C.O.T.S.Tuesday,January22,2019SpringBreakBegins(CloseofClasses)Saturday," \
+              "March2,2019SpringBreakEnds(ClassesResume-8:00am)Monday,March11,2019LastDaytoWithdraw(" \
+              "11:59pmusingS.C.O.T.S.)Friday,March29,2019LastDayofClassMonday,April29," \
+              "2019FinalExamPeriodBeginsTuesday,April30,2019EndofSemesterFriday,May3,2019CommencementSaturday,May4," \
+              "2019Pleasenote:Alldatesaboveareasof4/18/2018Note:Fall2018PartofTermA(" \
+              "35classdays)First7.5weeksStartDate:August27,2018LastDaytoDrop-AddŒAugust29," \
+              "2018LastDaytoWithdrawŒSeptember27,20184:30pmatHamiltonHall11:59pmusingSCOTSEndDate:October16," \
+              "2018Spring2019PartofTermA(35classdays)First7.5weeksStartDate:January14," \
+              "2019LastDaytoDrop-AddŒJanuary16,2019LastDaytoWithdrawŒFebruary14," \
+              "20194:30pmatHamiltonHall11:59pmusingSCOTSEndDate:March11,2019Fall2018PartofTermB(" \
+              "35classdays)Last7.5weeksStartDate:October17,2018LastDaytoDrop-AddŒOctober19," \
+              "2018LastDaytoWithdrawŒNovember18,20184:30pmatHamiltonHall11:59pmusingSCOTSEndDate:December7," \
+              "2018Spring2019PartofTermB(35classdays)Last7.5weeksStartDate:March12,2019LastDaytoDrop-AddŒMarch14," \
+              "2019LastDaytoWithdrawŒApril11,20194:30pmatHamiltonHall11:59pmusingSCOTSEndDate:April29,2019 "
 
 def simple_tests():
     # myCal = Calendar()

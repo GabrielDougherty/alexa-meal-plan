@@ -84,8 +84,14 @@ class MealPlan:
     def cur_meals(self):
         return self._cur_meals
 
+class ICalParser:
+    def __init__(self, cal_start=None):
+        # except NotImplementedError("This should be implemented")
 
-class CalParser:
+    def gen_cal_txt(self):
+        except NotImplementedError("This should be implemented")
+
+class CalParser(ICalParser):
     def __init__(self, cal_start=None):
         self._cur_date = datetime.now().date()
 
