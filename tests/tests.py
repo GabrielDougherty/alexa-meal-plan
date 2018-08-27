@@ -52,7 +52,7 @@ def simple_tests():
 class TestCalParser(unittest.TestCase):
 
     def test_parse_cal(self):
-        test_parser = mealplan.CalParser(cal_start=2018)
+        test_parser = mealplan.CalParser()
         txt = test_parser.gen_cal_txt()
 
 
@@ -93,7 +93,8 @@ class TestBreakBuilder(unittest.TestCase):
 class TestDaysRemaining(unittest.TestCase):
 
     def test_days_remaining(self):
-        rem = mealplan.DaysRemaining(cal_start=2018)
+        parser = mealplan.CalParser()
+        rem = mealplan.DaysRemaining(parser, cal_start=2018)
 
         days_rem = rem.days_remaining_until(rem.semester_end)
 

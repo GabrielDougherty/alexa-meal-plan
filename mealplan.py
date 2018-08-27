@@ -55,7 +55,8 @@ class MealPlan:
 
     def __det_target_meals(self):
         target = None
-        rem = DaysRemaining()
+        parser = CalParser()
+        rem = DaysRemaining(parser)
 
         if self._plan_type == MealType.BLOCK:
             target = self._cur_meals/rem.days_remaining_until(rem.semester_end)
@@ -85,17 +86,16 @@ class MealPlan:
         return self._cur_meals
 
 class ICalParser:
-    def __init__(self, cal_start=None):
+    def __init__(self):
+        pass
         # except NotImplementedError("This should be implemented")
 
     def gen_cal_txt(self):
-        except NotImplementedError("This should be implemented")
+        raise NotImplementedError("This should be implemented")
 
 class CalParser(ICalParser):
-    def __init__(self, cal_start=None):
+    def __init__(self):
         self._cur_date = datetime.now().date()
-
-        self._cal_start = cal_start
 
     def gen_cal_txt(self) -> str:
         cal_txt = self.__parse_calendar()
@@ -270,11 +270,11 @@ class BreakBuilder:
 
 
 class DaysRemaining:
-    def __init__(self, cal_start=None):  # TODO: parametrize classes as interfaces
+    def __init__(self, parser, cal_start=None):  # TODO: parametrize classes as interfaces
         self._cur_date = datetime.now().date()
         self._cal_start = cal_start or self.__semester_start()
 
-        parser = CalParser(cal_start=cal_start)
+        parser = parser
         self._cal_txt = parser.gen_cal_txt()
 
         builder = BreakBuilder(self._cal_txt, self._cal_start)
