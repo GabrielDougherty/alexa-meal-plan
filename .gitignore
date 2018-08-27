@@ -1,3 +1,5 @@
 # emacs temp files
 *~
 lambda.zip
+__pycache__/
+
